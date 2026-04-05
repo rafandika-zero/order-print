@@ -252,7 +252,7 @@ try{
 let pesan = `halo admin, saya ${document.getElementById("nama").value}
 sudah order dengan id pemesanan: ${result.id} yaa`;
 
-window.location.href = "https://api.whatsapp.com/send?phone=6289653036694&text=" + encodeURIComponent(pesan);
+window.location.href = "https://wa.me/6289653036694?text=" + encodeURIComponent(pesan);
   
 }catch(err){
 alert("Gagal kirim ke server");
