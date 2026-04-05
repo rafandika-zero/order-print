@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Print Online</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:0}
+.container{width:100%;background:white}
+
+/* SLIDER */
+.slider{overflow:hidden;background:#111;height:60px;display:flex;align-items:center}
+.slide-track{display:flex;animation:scroll 6s linear infinite}
+.slide-text{white-space:nowrap;color:#ff3b3b;font-weight:bold;padding-right:80px}
+
+@keyframes scroll{
+0%{transform:translateX(0)}
+100%{transform:translateX(-50%)}
+}
+
+/* CONTENT */
+.content{max-width:900px;margin:auto;padding:25px 15px}
+
+h2{text-align:center}
+
+/* INFO */
+.info-box{
+display:flex;justify-content:space-between;align-items:center;
+background:#e9edf3;padding:20px 25px;border-radius:10px;margin-bottom:15px
+}
+
+.info-left{padding-left:10px;text-align:center}
+.big-number{font-size:42px;font-weight:bold}
+
+/* INPUT */
+input,select{width:100%;padding:8px;margin:6px 0 14px;border-radius:6px;border:1px solid #ccc}
+
+.option-box{background:#fafafa;border:1px solid #eee;padding:12px;border-radius:6px;margin-bottom:12px}
+
+/* TOGGLE */
+.toggle{position:relative;width:50px;height:25px}
+.toggle input{display:none}
+.slider-toggle{position:absolute;background:#ccc;border-radius:25px;top:0;bottom:0;left:0;right:0}
+.slider-toggle:before{content:"";position:absolute;width:20px;height:20px;background:white;border-radius:50%;left:3px;top:2.5px;transition:.3s}
+.toggle input:checked + .slider-toggle{background:#28a745}
+.toggle input:checked + .slider-toggle:before{transform:translateX(24px)}
+
+.checkbox-box{display:flex;justify-content:space-between;align-items:center}
+
+.total{font-size:26px;font-weight:bold;text-align:center;margin-bottom:20px}
+
+button{width:100%;padding:12px;border:none;border-radius:6px;color:white;cursor:pointer}
+
+.button-area{margin-top:30px;padding-bottom:30px}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="slider">
+<div class="slide-track">
+<div class="slide-text">PASTIKAN KIRIM PDF DAN JANGAN SAMPAI ADA HALAMAN KOSONG!!!</div>
+<div class="slide-text">PASTIKAN KIRIM PDF DAN JANGAN SAMPAI ADA HALAMAN KOSONG!!!</div>
+</div>
+</div>
+
+<div class="content">
+
+<h2>Form Order Print</h2>
+
+<div class="total">Total Bayar: Rp <span id="total">0</span></div>
+
+<label>Upload File (PDF)</label>
+<input type="file" id="fileInput" accept="application/pdf">
+
+<div class="info-box">
+<div class="info-left">
+<div>Jumlah Halaman</div>
+<div class="big-number" id="halaman">0</div>
+</div>
+
+<div>
+<div>Warna: <b><span id="warna">0</span></b></div>
+<div>Hitam Putih: <b><span id="bw">0</span></b></div>
+</div>
+</div>
+
+<div class="option-box checkbox-box">
+<label>Print Semua Hitam Putih</label>
+<label class="toggle">
+<input type="checkbox" id="forceBW" onchange="hitungTotal()">
+<span class="slider-toggle"></span>
+</label>
+</div>
+
+<div class="option-box">
+<label>Kertas</label>
+<select id="kertas" onchange="hitungTotal()">
+<option value="0">A4</option>
+<option value="0">F4</option>
+</select>
+</div>
+
+<div class="option-box">
+<label>Cover</label>
+<select id="cover" onchange="hitungTotal()">
+<option value="0">Tidak</option>
+<option value="1500">Mika</option>
+<option value="3000">Double Mika</option>
+</select>
+</div>
+
+<div class="option-box">
+<label>Tambahan</label>
+<select id="tambahanTipe" onchange="hitungTotal()">
+<option value="0">Tidak</option>
+<option value="1000">Mika</option>
+</select>
+
+<input type="number" id="tambahanJumlah" value="1" min="1" onchange="hitungTotal()">
+</div>
+
+<div class="button-area">
+
+<button onclick="kirimData()" style="background:#17a2b8;margin-bottom:10px">
+simpan order
+</button>
+
+<a href="https://forms.gle/tWd7MdCrzjjGsLP19" target="_blank">
+<button style="background:#28a745;margin-bottom:10px">lanjut order</button>
+</a>
+
+<a href="https://sites.google.com/view/copyinaja/">
+<button style="background:#6c757d">kembali ke beranda</button>
+</a>
+
+</div>
+
+</div>
+</div>
+
+<script>
+const BW_PRICE=300,COLOR_PRICE=600;
+let bwPages=0,colorPages=0,totalPages=0,currentTotal=0;
+
+function animateTotal(newTotal){
+let start=currentTotal,end=newTotal,duration=1200,startTime=null;
+function animate(t){
+if(!startTime)startTime=t;
+let progress=t-startTime;
+let percent=Math.min(progress/duration,1);
+percent=1-Math.pow(1-percent,3);
+let value=Math.floor(start+(end-start)*percent);
+document.getElementById("total").innerText=value.toLocaleString('id-ID');
+if(percent<1){requestAnimationFrame(animate)}else{currentTotal=end}
+}
+requestAnimationFrame(animate);
+}
+
+document.getElementById('fileInput').addEventListener('change',async e=>{
+const file=e.target.files[0];if(!file)return;
+const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+totalPages=pdf.numPages;colorPages=0;bwPages=0;
+
+for(let i=1;i<=totalPages;i++){
+let page=await pdf.getPage(i);
+let v=page.getViewport({scale:.5});
+let c=document.createElement('canvas'),ctx=c.getContext('2d');
+c.width=v.width;c.height=v.height;
+await page.render({canvasContext:ctx,viewport:v}).promise;
+let img=ctx.getImageData(0,0,c.width,c.height).data;
+let isColor=false;
+for(let p=0;p<img.length;p+=40){
+if(!(img[p]===img[p+1]&&img[p+1]===img[p+2])){isColor=true;break;}
+}
+isColor?colorPages++:bwPages++;
+}
+
+document.getElementById("halaman").innerText=totalPages;
+document.getElementById("warna").innerText=colorPages;
+document.getElementById("bw").innerText=bwPages;
+
+hitungTotal();
+});
+
+function hitungTotal(){
+let bw=bwPages,color=colorPages;
+if(document.getElementById("forceBW").checked){bw=totalPages;color=0;}
+
+let total=(bw*BW_PRICE)+(color*COLOR_PRICE);
+total+=parseInt(document.getElementById("cover").value)
++ (parseInt(document.getElementById("tambahanTipe").value)
+*parseInt(document.getElementById("tambahanJumlah").value||0));
+
+animateTotal(total);
+}
+
+async function kirimData(){
+const file=document.getElementById("fileInput").files[0];
+let base64="";
+
+if(file){
+const reader=new FileReader();
+base64=await new Promise(res=>{
+reader.onload=()=>res(reader.result.split(",")[1]);
+reader.readAsDataURL(file);
+});
+}
+
+fetch("https://script.google.com/macros/s/AKfycbzNEhl7HD3_en4z-aqKLGHaKNsFDksUOh7NJhfcnT23FMikMbapzSvqHGiGmY9e1EMdhw/exec",{
+method:"POST",
+body:JSON.stringify({
+halaman:totalPages,
+warna:colorPages,
+bw:bwPages,
+total:currentTotal,
+kertas:document.getElementById("kertas").value,
+cover:document.getElementById("cover").value,
+tambahan:document.getElementById("tambahanJumlah").value,
+file:base64
+})
+})
+.then(res=>res.json())
+.then(res=>{
+let pesan=`aku sudah order dengan id pemesanan: ${res.id} ya`;
+window.open("https://wa.me/6289653036694?text="+encodeURIComponent(pesan));
+})
+.catch(()=>alert("Gagal kirim"));
+}
+</script>
+
+</body>
+</html>
