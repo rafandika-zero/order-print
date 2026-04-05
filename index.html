@@ -222,7 +222,9 @@ reader.readAsDataURL(file);
 });
 }
 
-fetch("https://script.google.com/macros/s/AKfycbzNEhl7HD3_en4z-aqKLGHaKNsFDksUOh7NJhfcnT23FMikMbapzSvqHGiGmY9e1EMdhw/exec",{
+try{
+
+let response = await fetch("https://script.google.com/macros/s/AKfycbzNEhl7HD3_en4z-aqKLGHaKNsFDksUOh7NJhfcnT23FMikMbapzSvqHGiGmY9e1EMdhw/exec",{
 method:"POST",
 body:JSON.stringify({
 nama:document.getElementById("nama").value,
@@ -236,14 +238,27 @@ cover:document.getElementById("cover").value,
 tambahan:document.getElementById("tambahanJumlah").value,
 file:base64
 })
-})
-.then(res=>res.json())
-.then(res=>{
-let pesan=`halo admin, saya ${document.getElementById("nama").value}
-sudah order dengan id pemesanan: ${res.id} yaa`;
+});
+
+let text = await response.text();
+let result = {};
+
+try{
+  result = JSON.parse(text);
+}catch(e){
+  result.id = "ORD-" + Date.now();
+}
+
+let pesan = `halo admin, saya ${document.getElementById("nama").value}
+sudah order dengan id pemesanan: ${result.id} yaa`;
+
 window.open("https://wa.me/6289653036694?text="+encodeURIComponent(pesan));
-})
-.catch(()=>alert("Gagal kirim"));
+
+}catch(err){
+alert("Gagal kirim ke server");
+console.error(err);
+}
+
 }
 </script>
 
