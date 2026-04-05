@@ -11,7 +11,6 @@
 body{font-family:Arial;background:#f4f4f4;margin:0}
 .container{width:100%;background:white}
 
-/* SLIDER */
 .slider{overflow:hidden;background:#111;height:60px;display:flex;align-items:center}
 .slide-track{display:flex;animation:scroll 6s linear infinite}
 .slide-text{white-space:nowrap;color:#ff3b3b;font-weight:bold;padding-right:80px}
@@ -21,26 +20,22 @@ body{font-family:Arial;background:#f4f4f4;margin:0}
 100%{transform:translateX(-50%)}
 }
 
-/* CONTENT */
 .content{max-width:900px;margin:auto;padding:25px 15px}
-
 h2{text-align:center}
 
-/* INFO */
-.info-box{
-display:flex;justify-content:space-between;align-items:center;
-background:#e9edf3;padding:20px 25px;border-radius:10px;margin-bottom:15px
-}
-
-.info-left{padding-left:10px;text-align:center}
-.big-number{font-size:42px;font-weight:bold}
-
-/* INPUT */
-input,select{width:100%;padding:8px;margin:6px 0 14px;border-radius:6px;border:1px solid #ccc}
+input,select{width:100%;padding:10px;margin:6px 0 14px;border-radius:6px;border:1px solid #ccc}
 
 .option-box{background:#fafafa;border:1px solid #eee;padding:12px;border-radius:6px;margin-bottom:12px}
 
-/* TOGGLE */
+.info-box{
+display:flex;justify-content:space-between;align-items:center;
+background:#e9edf3;padding:20px;border-radius:10px;margin-bottom:15px
+}
+
+.big-number{font-size:40px;font-weight:bold}
+
+.checkbox-box{display:flex;justify-content:space-between;align-items:center}
+
 .toggle{position:relative;width:50px;height:25px}
 .toggle input{display:none}
 .slider-toggle{position:absolute;background:#ccc;border-radius:25px;top:0;bottom:0;left:0;right:0}
@@ -48,9 +43,7 @@ input,select{width:100%;padding:8px;margin:6px 0 14px;border-radius:6px;border:1
 .toggle input:checked + .slider-toggle{background:#28a745}
 .toggle input:checked + .slider-toggle:before{transform:translateX(24px)}
 
-.checkbox-box{display:flex;justify-content:space-between;align-items:center}
-
-.total{font-size:26px;font-weight:bold;text-align:center;margin-bottom:20px}
+.total{font-size:26px;font-weight:bold;text-align:center;margin-bottom:10px}
 
 button{width:100%;padding:12px;border:none;border-radius:6px;color:white;cursor:pointer}
 
@@ -74,12 +67,21 @@ button{width:100%;padding:12px;border:none;border-radius:6px;color:white;cursor:
 <h2>Form Order Print</h2>
 
 <div class="total">Total Bayar: Rp <span id="total">0</span></div>
+<p style="text-align:center;font-size:12px;color:#777">
+Estimasi harga, bisa berubah setelah dicek admin
+</p>
+
+<label>Nama</label>
+<input type="text" id="nama" placeholder="Masukkan nama">
+
+<label>No. WhatsApp</label>
+<input type="number" id="nomor" placeholder="08xxxxxxxxxx">
 
 <label>Upload File (PDF)</label>
 <input type="file" id="fileInput" accept="application/pdf">
 
 <div class="info-box">
-<div class="info-left">
+<div>
 <div>Jumlah Halaman</div>
 <div class="big-number" id="halaman">0</div>
 </div>
@@ -91,7 +93,13 @@ button{width:100%;padding:12px;border:none;border-radius:6px;color:white;cursor:
 </div>
 
 <div class="option-box checkbox-box">
+<div>
 <label>Print Semua Hitam Putih</label>
+<div style="font-size:12px;color:#666">
+Semua halaman dihitung hitam putih (lebih murah)
+</div>
+</div>
+
 <label class="toggle">
 <input type="checkbox" id="forceBW" onchange="hitungTotal()">
 <span class="slider-toggle"></span>
@@ -127,13 +135,9 @@ button{width:100%;padding:12px;border:none;border-radius:6px;color:white;cursor:
 
 <div class="button-area">
 
-<button onclick="kirimData()" style="background:#17a2b8;margin-bottom:10px">
-simpan order
+<button onclick="kirimData()" style="background:#28a745;margin-bottom:10px">
+kirim ke admin
 </button>
-
-<a href="https://forms.gle/tWd7MdCrzjjGsLP19" target="_blank">
-<button style="background:#28a745;margin-bottom:10px">lanjut order</button>
-</a>
 
 <a href="https://sites.google.com/view/copyinaja/">
 <button style="background:#6c757d">kembali ke beranda</button>
@@ -201,6 +205,12 @@ animateTotal(total);
 }
 
 async function kirimData(){
+
+if(!document.getElementById("nama").value || !document.getElementById("nomor").value){
+alert("Isi nama dan nomor dulu");
+return;
+}
+
 const file=document.getElementById("fileInput").files[0];
 let base64="";
 
@@ -212,9 +222,11 @@ reader.readAsDataURL(file);
 });
 }
 
-fetch("https://script.google.com/macros/s/AKfycbzNEhl7HD3_en4z-aqKLGHaKNsFDksUOh7NJhfcnT23FMikMbapzSvqHGiGmY9e1EMdhw/exec",{
+fetch("PASTE_URL_APPS_SCRIPT_DISINI",{
 method:"POST",
 body:JSON.stringify({
+nama:document.getElementById("nama").value,
+nomor:document.getElementById("nomor").value,
 halaman:totalPages,
 warna:colorPages,
 bw:bwPages,
@@ -227,8 +239,9 @@ file:base64
 })
 .then(res=>res.json())
 .then(res=>{
-let pesan=`aku sudah order dengan id pemesanan: ${res.id} ya`;
-window.open("https://wa.me/6289653036694?text="+encodeURIComponent(pesan));
+let pesan=`halo admin, saya ${document.getElementById("nama").value}
+sudah order dengan id pemesanan: ${res.id} yaa`;
+window.open("https://wa.me/628XXXXXXXXXX?text="+encodeURIComponent(pesan));
 })
 .catch(()=>alert("Gagal kirim"));
 }
